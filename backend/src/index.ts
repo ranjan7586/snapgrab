@@ -23,6 +23,7 @@ app.use(express.json({ limit: "100kb" }));
 app.use(
   cors({
     origin: (origin, callback) => {
+      console.log(origin)
       // Allow server-to-server / curl requests with no Origin header, and
       // any origin explicitly listed in FRONTEND_URL.
       if (!origin || allowedOrigins.includes(origin)) {
