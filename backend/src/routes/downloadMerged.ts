@@ -40,10 +40,9 @@ router.get("/", async (req, res, next) => {
   try {
     filePath = await mergeVideoWithAudio(sourceUrl, formatId);
 
-    // Normally this is always .mp4 (--merge-output-format mp4 in
-    // services/merge.ts), but the file is found on disk rather than assumed
-    // by name — see findOutputFile() — so handle whatever extension it
-    // actually landed with rather than mislabeling it.
+    // merge.ts normalizes the final file to a WhatsApp-compatible MP4. Keep
+    // extension detection defensive so the response is never mislabeled if
+    // the output strategy changes later.
     const actualExt = path.extname(filePath).toLowerCase() || ".mp4";
     const safeName = (filename || "video").replace(/[^a-zA-Z0-9-_. ]/g, "_").slice(0, 120);
     const baseName = safeName.replace(/\.[a-zA-Z0-9]+$/, "");

@@ -169,12 +169,10 @@ downloaded and muxed server-side before the first byte can be sent. The
 frontend shows a "Preparing your file…" state for this reason (see
 `QualityButton.tsx`).
 
-The file is an `.mkv` by default (`Content-Type: video/x-matroska`), not
-`.mp4` — see `docs/ARCHITECTURE.md` for why mp4 specifically was dropped as
-the default (it can silently produce a black-screen-with-audio file for
-fragmented/DASH sources). Set `MERGE_CONTAINER=mp4` server-side if you want
-to try mp4 output instead; the response's `Content-Type` and filename
-extension always match whatever the backend actually produced.
+The response is an `.mp4` containing H.264 video (`yuv420p`) and AAC-LC
+audio. The server deliberately transcodes after merging because an MP4
+container may otherwise contain VP9/AV1 video or HE-AAC/Opus audio that VLC
+can play but stricter clients such as WhatsApp reject.
 
 **Errors**
 
@@ -187,7 +185,7 @@ extension always match whatever the backend actually produced.
 | 429         | `RATE_LIMITED`         | Too many merge requests from this IP — see `MERGE_RATE_LIMIT_*`    |
 | 500         | `YTDLP_MISSING`        | `yt-dlp` binary isn't installed/reachable on the server             |
 | 500         | `FFMPEG_MISSING`       | `ffmpeg` binary isn't installed/reachable on the server — checked before yt-dlp even runs, so this fails fast with a clear message instead of a silent audio-less download |
-| 504         | `MERGE_TIMEOUT`        | Merge took longer than the internal timeout (120s)                 |
+| 504         | `MERGE_TIMEOUT`        | Download/merge or compatibility transcoding exceeded its timeout  |
 
 ---
 

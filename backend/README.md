@@ -52,7 +52,7 @@ touch per-environment:
 | `FRONTEND_URL`  | Comma-separated list of origins allowed by CORS                |
 | `YTDLP_PATH`    | Path/command for the yt-dlp binary (usually just `"yt-dlp"`)   |
 | `FFMPEG_PATH`   | Path/command for ffmpeg (usually just `"ffmpeg"`), used by `/api/download-merged` |
-| `MERGE_CONTAINER` | Container for merged video+audio, default `mkv` (avoids a black-screen-with-audio issue mp4 can hit on fragmented sources — see `docs/ARCHITECTURE.md`) |
+| `MERGE_CONTAINER` | Intermediate merge container, default `mkv`; the response is normalized to H.264/AAC-LC MP4 |
 | `CACHE_TTL_SECONDS` | How long an extraction result is cached in memory per URL  |
 | `RATE_LIMIT_*`  | Basic per-IP throttling on `/api/extract`                       |
 | `MERGE_RATE_LIMIT_*` | Stricter per-IP throttling on `/api/download-merged` (more expensive per request) |
@@ -95,7 +95,9 @@ summary:
   formats with no audio track of their own (`needsMerge: true`): re-runs
   yt-dlp against `sourceUrl` with `-f "<formatId>+bestaudio"`, muxes the
   result with ffmpeg, streams the finished file, then deletes the temp copy.
-  Slower and more rate-limited than plain `/api/download`.
+  The merged file is transcoded to H.264 video and AAC-LC audio in MP4 so it
+  works in WhatsApp and stricter mobile players. Slower and more rate-limited
+  than plain `/api/download`.
 - `GET /health` — liveness check, returns `{ ok: true }`.
 
 ## Adding a fourth platform

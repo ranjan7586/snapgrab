@@ -109,18 +109,20 @@ URL:
   /api/download-merged?sourceUrl=...&formatId=...` — handled by
   `services/merge.ts`, which:
   1. re-runs yt-dlp against the *original post URL* (not the expired-prone
-     resolved CDN URL) with `-f "<formatId>+bestaudio/best" --merge-output-format mp4`,
+     resolved CDN URL) with `-f "<formatId>+bestaudio/best"`,
   2. lets yt-dlp's own ffmpeg integration download both streams and mux them
-     into a single mp4 on local disk (`os.tmpdir()`),
-  3. streams that finished file back to the browser with a clean filename,
-  4. deletes the temp file once the response stream closes (success, client
+     on local disk (`os.tmpdir()`),
+  3. transcodes the result to H.264 video (`yuv420p`) and AAC-LC audio in an
+     MP4 container so stricter mobile apps such as WhatsApp accept it,
+  4. streams that finished file back to the browser with a clean filename,
+  5. deletes the temp file once the response stream closes (success, client
      disconnect, or error — see the `cleanup()` handler in
      `routes/downloadMerged.ts`).
 
 This route is meaningfully more expensive than the plain proxy — it has to
 fully download and re-encode/mux before the first byte reaches the browser —
 so it gets its own stricter rate limit (`mergeLimiter` in
-`middleware/rateLimiter.ts`) and a much longer timeout (120s vs. 25s for
+`middleware/rateLimiter.ts`) and much longer merge/transcode timeouts than metadata extraction
 metadata extraction). The frontend shows a "Preparing your file…" state with
 a spinner on click for exactly this reason, since a plain anchor download
 would otherwise look frozen for up to a minute with no feedback. `formatId`
@@ -139,21 +141,12 @@ spawn no longer passes `--no-warnings` — an earlier version did, which
 swallowed exactly the warning that would've explained a failure, leaving
 only a generic "Unknown error" in the response.
 
-A second sharp edge, past just getting ffmpeg installed: **the merge
-container matters.** The first working version forced
-`--merge-output-format mp4`, which merges by remuxing (copying the encoded
-data as-is, no re-encoding, for speed) rather than transcoding. mp4 is picky
-about what it'll accept that way — muxing a fragmented/DASH-sourced video
-track (exactly what a `needsMerge` format is) into mp4 without a re-encode
-is a well-documented way to end up with a file that plays audio over a
-black screen in some players, even though every byte of video data is
-technically present. `mkv` accepts virtually any codec combination as-is,
-which is also why it's yt-dlp's own default merge container when you don't
-override it. `MERGE_CONTAINER` (default `mkv`) controls this — see
-`backend/.env.example`. `routes/downloadMerged.ts` and `findOutputFile()`
-in `merge.ts` don't hardcode an extension anywhere; they pick up whatever
-container the file actually landed in, so changing this env var is the only
-thing you'd need to touch to experiment with it.
+A second sharp edge is that **MP4 is only a container, not a codec**. A
+remuxed MP4 may still contain VP9/AV1 video or HE-AAC/Opus audio. VLC can
+play those combinations, while WhatsApp accepts only a much narrower
+H.264/AAC combination. `MERGE_CONTAINER` (default `mkv`) therefore controls
+only yt-dlp's intermediate merge. The backend then transcodes that file to
+H.264 Main, `yuv420p`, and AAC-LC and serves the compatible MP4.
 
 ## Frontend structure
 
