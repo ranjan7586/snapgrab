@@ -1,0 +1,148 @@
+@import "tailwindcss";
+
+/* Tailwind v4 uses CSS-based dark mode config. This makes `dark:` variants
+   respond to a `.dark` class on <html> (toggled by next-themes) instead of
+   only the OS-level prefers-color-scheme media query. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #f6f6fb;
+  --background-alt: #ffffff;
+  --foreground: #0b0c14;
+  --muted: #5b5f73;
+  --surface: rgba(255, 255, 255, 0.7);
+  --surface-border: rgba(15, 15, 25, 0.08);
+  --accent-violet: #7c3aed;
+  --accent-fuchsia: #db2777;
+  --accent-cyan: #0891b2;
+  --ring: rgba(124, 58, 237, 0.35);
+  --shadow-glow: 0 0 0 rgba(0, 0, 0, 0);
+}
+
+.dark {
+  --background: #05050a;
+  --background-alt: #0b0b14;
+  --foreground: #f3f3fb;
+  --muted: #9a9db4;
+  --surface: rgba(255, 255, 255, 0.045);
+  --surface-border: rgba(255, 255, 255, 0.09);
+  --accent-violet: #a78bfa;
+  --accent-fuchsia: #f472b6;
+  --accent-cyan: #22d3ee;
+  --ring: rgba(167, 139, 250, 0.4);
+  --shadow-glow: 0 0 60px rgba(124, 58, 237, 0.25);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-background-alt: var(--background-alt);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-surface: var(--surface);
+  --color-surface-border: var(--surface-border);
+  --color-accent-violet: var(--accent-violet);
+  --color-accent-fuchsia: var(--accent-fuchsia);
+  --color-accent-cyan: var(--accent-cyan);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+}
+
+* {
+  border-color: var(--surface-border);
+}
+
+html {
+  color-scheme: light;
+}
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ---------- Reusable design primitives ---------- */
+
+.glass {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.gradient-text {
+  background: linear-gradient(
+    100deg,
+    var(--accent-violet),
+    var(--accent-fuchsia) 55%,
+    var(--accent-cyan)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.glow-ring:focus-within {
+  box-shadow: 0 0 0 4px var(--ring);
+}
+
+.btn-gradient {
+  background: linear-gradient(120deg, var(--accent-violet), var(--accent-fuchsia));
+  box-shadow: 0 8px 30px -8px rgba(124, 58, 237, 0.55);
+}
+.btn-gradient:hover {
+  filter: brightness(1.08);
+}
+.btn-gradient:active {
+  filter: brightness(0.95);
+}
+
+/* Animated aurora orbs used behind the hero section */
+@keyframes float-slow {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(3%, -4%) scale(1.08); }
+}
+@keyframes float-slow-reverse {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-4%, 3%) scale(1.05); }
+}
+.animate-float-a {
+  animation: float-slow 14s ease-in-out infinite;
+}
+.animate-float-b {
+  animation: float-slow-reverse 18s ease-in-out infinite;
+}
+
+/* Subtle noise/grid overlay for the futuristic feel */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, var(--surface-border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--surface-border) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 100%);
+}
+
+::selection {
+  background: var(--accent-violet);
+  color: white;
+}
+
+/* Custom scrollbar for that polished, modern feel */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--surface-border);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-violet);
+}
